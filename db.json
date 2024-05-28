@@ -1,0 +1,22 @@
+{
+  "mocData": [
+    {
+      "id": "employee",
+      "employee": {
+        "name": "rupeshLrm",
+        "email": "rupeshlrm@test@gmai.com",
+        "contactNo": "9898745454",
+        "department": "CS"
+      }
+    },
+    {
+      "id": "emp",
+      "emp": {
+        "name": "Yogesh",
+        "email": "yogesh@test@gmai.com",
+        "contactNo": "9898745454",
+        "department": "CS"
+      }
+    }
+  ]
+}
