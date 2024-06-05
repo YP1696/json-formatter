@@ -12,8 +12,28 @@
     {
       "id": "emp",
       "emp": {
-        "name": "Yogesh",
+        "name": "yogesh",
         "email": "yogesh@test@gmai.com",
+        "contactNo": "9898745454",
+        "department": "CS"
+      }
+    }
+  ],
+  "postData": [
+    {
+      "id": "deleted",
+      "deleted": {
+        "name": "yogesh",
+        "email": "yogesh@test@gmai.com",
+        "contactNo": "9898745454",
+        "department": "CS"
+      }
+    },
+    {
+      "id": "dealer",
+      "dealer": {
+        "name": "test dealer successful",
+        "email": "test@gmail.com",
         "contactNo": "9898745454",
         "department": "CS"
       }

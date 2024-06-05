@@ -7,20 +7,40 @@ import { map } from 'rxjs/operators'; // Import the map operator
   providedIn: 'root',
 })
 export class DataService {
-  private baseUrl = 'http://localhost:3000/mocData';
+  private getUrl = 'http://localhost:3000/mocData';
+  private postUrl = 'http://localhost:3000/postData';
+
 
   constructor(private http: HttpClient) {}
 
-  getData(): Observable<any> {
-    return this.http.get(this.baseUrl);
+  // getData(): Observable<any> {
+  //   return this.http.get(this.getUrl);
+  // }
+
+   getData(method : string): Observable<any> {
+    if(method === 'get'){
+      return this.http.get(this.getUrl);
+    }else{
+      return this.http.get(this.postUrl);
+    }
   }
 
-  createNewCollection(key: string, postBody: any): Observable<any> {
+  postData(data: any): Observable<any> {
+    return this.http.post(this.postUrl, data);
+  }
+
+
+
+  createNewCollection(key: string, postBody: any, method : string): Observable<any> {
     const newCollection = {
       id : key,
       [key]:postBody,
     };
-    return this.http.post(this.baseUrl, newCollection);
+    if(method === 'get'){
+      return this.http.post(this.getUrl, newCollection);
+    }else{
+      return this.http.post(this.postUrl, newCollection);
+    }
   }
 
   // addToExistingCollection(key: string, postBody: any): Observable<any> {
@@ -30,16 +50,22 @@ export class DataService {
   //   return this.http.post(this.baseUrl, updateCollection);
   // }
 
-  replaceCollection(id: string,key:string, postBody: any): Observable<any> {
+  replaceCollection(id: string,key:string, postBody: any, method : string): Observable<any> {
     const replaceCollection = {
       id: key,
       [key]: postBody,
     };
-    return this.http.put(`${this.baseUrl}/${id}`, replaceCollection);
+    if(method === 'get'){
+      return this.http.put(`${this.getUrl}/${id}`, replaceCollection);
+    }else{
+      return this.http.put(`${this.postUrl}/${id}`, replaceCollection);
+
+    }
   }
 
 
-  // deleteCollection(key: string): Observable<any> {
-  //   return this.http.delete(`${this.baseUrl}/${key}`);
-  // }
+  deleteCollection(id: string): Observable<any> {
+    console.log('id: ', id);
+    return this.http.delete(`${this.getUrl}/${id}`);
+  }
 }

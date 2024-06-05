@@ -1,5 +1,5 @@
-<div class="border rounded-md m-3 p-3">
-  <form (ngSubmit)="onSubmit()" [formGroup]="form">
+<div class="border rounded-md m-3 md:p-10">
+  <form [formGroup]="form">
     <span> Enter Path : </span>
     <mat-form-field appearance="fill">
       <div class="static-input-combo">
@@ -13,15 +13,20 @@
         <mat-radio-button value="post">POST</mat-radio-button>
       </mat-radio-group>
     </div>
-    <button mat-raised-button color="primary" type="submit">
-      {{ form.value.method === 'get' ? 'Fetch Data' : 'Send Data' }}
-    </button>
-    <div class="flex justify-end">
+
+    <div class="flex justify-between">
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.value.method === 'get'" (click)="onSubmit()">
+        Send Data
+      </button>
+      <div class="flex gap-3">
+        <button mat-raised-button color="primary" type="submit" [disabled]="form.value.method === 'post'" (click)="onSubmit()">Start</button>
+        <button mat-raised-button color="warn" [disabled]="form.value.method === 'post'" (click)="stopData(form.value.inputField, form.value.method)">Stop</button>
+      </div>
       <button mat-raised-button color="primary" (click)="copyData($event)">
         Copy
       </button>
     </div>
-    <div class="h-96 w-full flex md:flex-row flex-col justify-between gap-4 items-center md:p-10 p-5 overflow-auto">
+    <div class="h-96 w-full flex md:flex-row flex-col justify-between gap-4 items-center pt-4 overflow-auto">
       <section class="h-full w-full bg-light-500 rounded-sm shadow-md" id="editor">
         <div class="json-input">
           <div class="flex-container">

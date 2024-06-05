@@ -6,6 +6,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { DataService } from 'src/data.service';
 
 @Component({
@@ -17,6 +18,7 @@ import { DataService } from 'src/data.service';
 export class AppComponent {
   title = 'demo-json-formatter';
   form: FormGroup;
+  currentId: string | null = null;
 
   @ViewChild('lineNumbers') lineNumbers!: ElementRef;
   @ViewChild('editor') editor!: ElementRef;
@@ -27,7 +29,7 @@ export class AppComponent {
   inputValue: string = JSON.stringify(this.dummyJsonObject);
   endPoint: any;
 
-  constructor(private fb: FormBuilder, private dataService: DataService) {
+  constructor(private fb: FormBuilder, private dataService: DataService,private snackBar: MatSnackBar) {
     this.form = this.fb.group({
       inputField: ['', Validators.required],
       method: ['', Validators.required],
@@ -45,6 +47,13 @@ export class AppComponent {
       : object;
   }
 
+  private showSnackbar(message: string, type: 'success' | 'error') {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: type,
+    });
+  }
+
   copyData(event: any) {
     event.preventDefault();
     const preElement = document.getElementById('jsonContent');
@@ -54,10 +63,10 @@ export class AppComponent {
         navigator.clipboard
           .writeText(jsonData)
           .then(() => {
-            console.log('JSON copied to clipboard successfully');
+            this.showSnackbar('JSON copied to clipboard successfully', 'success');
           })
           .catch((error) => {
-            console.error('Failed to copy JSON to clipboard:', error);
+            this.showSnackbar('Failed to copy JSON to clipboard', 'error');
           });
       }
     }
@@ -77,68 +86,86 @@ export class AppComponent {
   onSubmit(): void {
     const { inputField, method, inputValue } = this.form.value;
     this.endPoint = inputField;
+    if (!method) {
+      this.handleError('Method selection is required');
+      return;
+    }
 
-    if (method === 'get') {
-      this.dataService.getData().subscribe(
-        (data) => this.handleResponse(data),
-        (error) => this.handleError(error)
-      );
-    } else if (method === 'post') {
-      let postBody: any;
-      try {
-        postBody = JSON.parse(inputValue);
-      } catch (e) {
-        this.handleError('Invalid JSON for POST data');
-        return;
-      }
+    let postBody: any;
+    try {
+      postBody = JSON.parse(inputValue);
+    } catch (e) {
+      this.handleError('Invalid JSON for POST data');
+      return;
+    }
 
-      this.dataService.getData().subscribe(
-        (data) => {
-          const existingItem = data.find((item: any) =>
-            item.hasOwnProperty(inputField)
-          );
+      this.postData(inputField, postBody, method);
 
-          if (existingItem) {
- console.log("existingItem ", existingItem.id);
 
-            // this.dataService
-            //   .findParentObjectByKey('id', existingItem.id)
-            //   .subscribe((v) => console.log(v));
-const id  = existingItem.id
-            this.dataService.replaceCollection(id,inputField, postBody).subscribe(
+    // if (method === 'get') {
+    //   // Store data using the get method logic
+    //   this.storeData(inputField, postBody);
+    // } else if (method === 'post') {
+    //   // Post data using the post method logic
+    //   this.postData(inputField, postBody);
+    // }
+  }
+
+  postData(inputField: string, postBody: any, method : string): void {
+    this.dataService.getData(method).subscribe(
+      (data) => {
+        const existingItem = data.find((item: any) =>
+          item.hasOwnProperty(inputField)
+        );
+        if (existingItem) {
+          const id = existingItem.id;
+          this.dataService
+            .replaceCollection(id, inputField, postBody, method)
+            .subscribe(
               (data) => this.handleResponse(data),
               (postError) => this.handleError(postError)
             );
-          } else {
-            console.log('Key does not exist, creating new collection');
-            this.dataService
-              .createNewCollection(inputField, postBody)
-              .subscribe(
-                (data) => this.handleResponse(data),
-                (postError) => this.handleError(postError)
-              );
-          }
-        },
-        (error) => {
-          if (error.status === 404) {
-            console.log('Key does not exist, creating new collection');
-            this.dataService
-              .createNewCollection(inputField, postBody)
-              .subscribe(
-                (data) => this.handleResponse(data),
-                (postError) => this.handleError(postError)
-              );
-          } else {
-            this.handleError(error);
-          }
+        } else {
+          console.log('Key does not exist, creating new collection');
+          this.dataService.createNewCollection(inputField, postBody, method).subscribe(
+            (data) => this.handleResponse(data),
+            (postError) => this.handleError(postError)
+          );
         }
+      },
+      (error) => {
+        if (error.status === 404) {
+          console.log('Key does not exist, creating new collection');
+          this.dataService.createNewCollection(inputField, postBody, method).subscribe(
+            (data) => this.handleResponse(data),
+            (postError) => this.handleError(postError)
+          );
+        } else {
+          this.handleError(error);
+        }
+      }
+    );
+  }
+
+
+  stopData(inputField : string, method : string): void {
+    method = '';
+    if (inputField) {
+      this.dataService.deleteCollection(inputField).subscribe(
+        () => {
+          this.showSnackbar('Data deleted successfully', 'success');
+          inputField = '';
+        },
+        (error) => this.handleError(error)
       );
+    } else {
+      console.error('No ID available for deletion');
     }
   }
 
   handleResponse(data: any) {
     if (!Array.isArray(data)) {
-      console.error('Expected an array but received:', data);
+      console.log('Expected an array but received:', data);
       return;
     }
 
